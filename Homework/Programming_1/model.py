@@ -12,6 +12,7 @@ class LogisticRegression_Classifier(nn.Module):
         outputs = sigmoid(self.linear(x))
         return outputs
 
+
 class SVM_Classifier(nn.Module):
     def __init__(self, input_dim, output_dim):
-        super(SVM_Classifier,self).__init__()
+        super(SVM_Classifier, self).__init__()

@@ -1,6 +1,5 @@
 import argparse
 import os
-import warnings
 
 import numpy as np
 import torch
@@ -39,7 +38,7 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuf
                                           sampler=SubsetRandomSampler(subset_indices))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--epoch", default=100, type=int, help="Number of epochs to be trained")
+parser.add_argument("--epoch", default=30, type=int, help="Number of epochs to be trained")
 parser.add_argument("--gpu", default=3, type=int, help="GPU to use")
 parser.add_argument("--lr", default=3e-5, type=float, help="learning rate")
 parser.add_argument("--opt", default='SGD', choices=['SGD', 'SGDm'])
@@ -53,9 +52,6 @@ print('CUDA available:', torch.cuda.is_available())
 print(torch.cuda.get_device_name())
 print('Device number:', torch.cuda.device_count())
 print(torch.cuda.get_device_properties(device))
-
-if args.test == 1:
-    warnings.warn("Running in TEST mode!")
 
 # Set the GPU device
 if torch.cuda.is_available():
@@ -77,15 +73,13 @@ progress_bar = tqdm(range(num_epochs * len(train_loader)))
 
 # Training the Model
 # Notice that newest Pytorch merge tensor and variable, so the additional Variable wrapping is no longer required.
-record_dict = {'trn_loss': [], 'val_loss': [], 'trn_acc': [], 'val_acc': []}
+record_dict = {'trn_loss': [], 'val_loss': [], 'trn_acc': [], 'val_acc': [], 'trn_iter_loss': [], 'val_iter_loss': []}
 for epoch in range(num_epochs):
     total_loss = 0
     model.train()
     trn_total_pred, trn_total_label = [], []
     for i, (images, labels) in enumerate(train_loader):
         images = Variable(images.view(-1, 28 * 28))
-        # Convert labels from 0,1 to -1,1
-        # labels = Variable(2 * (labels.float() - 0.5))
         labels = Variable(labels)
 
         outputs = model(images)
@@ -95,7 +89,8 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        total_loss += loss.item() / len(labels)
+        total_loss += (loss.item() / len(labels))
+        record_dict['trn_iter_loss'].append(loss.item() / len(labels))
 
         predicted_answer = torch.argmax(outputs, dim=-1)
         truth_answer = labels.detach().cpu()
@@ -103,39 +98,39 @@ for epoch in range(num_epochs):
         trn_total_label.extend(truth_answer.tolist())
 
         progress_bar.update(1)
-    # Print your results every epoch
-    trn_acc = accuracy_score(trn_total_label, trn_total_pred)
+
+    trn_acc = float(100 * accuracy_score(trn_total_label, trn_total_pred))
     trn_loss = total_loss / len(train_loader)
-    record_dict['trn_acc'].append(trn_acc * 100)
+    record_dict['trn_acc'].append(trn_acc)
     record_dict['trn_loss'].append(trn_loss)
 
     # Test the Model
+    model.eval()
     correct = 0.
     total = 0.
     eval_total_loss = 0
-    model.eval()
+
     for images, labels in test_loader:
         images = Variable(images.view(-1, 28 * 28))
 
-        ## Put your prediction code here
         outputs = model(images)
         prediction = torch.argmax(outputs, dim=-1)
 
         loss = criterion(outputs, labels)
-        eval_total_loss += loss.item() / len(labels)
+        eval_total_loss += (loss.item() / len(labels))
+        record_dict['val_iter_loss'].append(loss.item() / len(labels))
 
         correct += (prediction.view(-1).long() == labels).sum()
         total += images.shape[0]
     eval_loss = eval_total_loss / len(test_loader)
-    eval_acc = 100 * correct.float() / total
+    eval_acc = float(100 * correct.float() / total)
     record_dict['val_acc'].append(eval_acc)
     record_dict['val_loss'].append(eval_loss)
     progress_bar.set_postfix({
         'trn_acc': trn_acc,
         'val_acc': eval_acc
     })
-    print('Accuracy of the model on train images: %f%% \t test images: %f%%' % (
-        100 * trn_acc, 100 * (correct.float() / total)))
+    print('Accuracy of the model on train images: %f%% \t test images: %f%%' % (trn_acc, eval_acc))
 
 np.save('{}/record.npy'.format(save_path), record_dict)
 torch.save(model.state_dict(), '{}/ckpt.pt'.format(save_path))

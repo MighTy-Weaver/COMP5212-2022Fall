@@ -18,9 +18,11 @@ opt_choices = ['SGD', 'SGDm']
 #                                                                ))
 
 plt.rcParams.update({'font.size': 16})
-plt.rcParams['figure.figsize'] = 17, 12
+plt.rcParams['figure.figsize'] = 20, 14
 template = ['./LR_{}_SGD_10/record.npy', './LR_{}_SGDm_10/record.npy', './SVM_{}_SGD_10/record.npy',
             './SVM_{}_SGDm_10/record.npy']
+title = ['Logistic Regression with SGD', 'Logistic Regression with SGD-Momentum ($m=0.9$)',
+         'Support Vector Machine with SGD', 'Support Vector Machine with SGD-Momentum ($m=0.9$)']
 for i in range(4):
     plt.subplot(2, 2, i + 1)
     for lr in [0.05, 0.005, 0.0005]:
@@ -29,4 +31,5 @@ for i in range(4):
     plt.legend()
     plt.xlabel("Iteration")
     plt.ylabel("Training Loss")
-plt.show()
+    plt.title(title[i])
+plt.savefig('./loss.png', dpi=400, bbox_inches='tight')

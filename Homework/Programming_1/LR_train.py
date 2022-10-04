@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 
 import numpy as np
 import torch
@@ -13,6 +14,14 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from model import LogisticRegression_Classifier
+
+seed = 518
+random.seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
 
 # Don't change batch size
 batch_size = 64
@@ -39,8 +48,8 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuf
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epoch", default=30, type=int, help="Number of epochs to be trained")
-parser.add_argument("--gpu", default=3, type=int, help="GPU to use")
-parser.add_argument("--lr", default=3e-5, type=float, help="learning rate")
+parser.add_argument("--gpu", default=0, type=int, help="GPU to use")
+parser.add_argument("--lr", default=1e-3, type=float, help="learning rate")
 parser.add_argument("--opt", default='SGD', choices=['SGD', 'SGDm'])
 args = parser.parse_args()
 
@@ -63,7 +72,7 @@ criterion = nn.CrossEntropyLoss()
 if args.opt == 'SGD':
     optimizer = SGD(model.parameters(), lr=args.lr, momentum=0)
 else:
-    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.8)
+    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
 save_path = f"./LR_{args.lr}_{args.opt}_{args.epoch}/"
 if not os.path.exists(save_path):

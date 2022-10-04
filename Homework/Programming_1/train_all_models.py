@@ -7,3 +7,4 @@ for lr in lr_choices:
     for opt in opt_choices:
         os.system("python LR_train.py --opt {} --lr {} --epoch 10".format(opt, lr))
         os.system("python SVM_train.py --opt {} --lr {} --epoch 10".format(opt, lr))
+os.system("python evaluate.py")

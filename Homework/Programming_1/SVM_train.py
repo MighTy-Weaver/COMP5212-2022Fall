@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 
 import numpy as np
 import torch
@@ -11,6 +12,14 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from model import SVM_Classifier
+
+seed = 518
+random.seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
 
 # Don't change batch size
 batch_size = 64
@@ -80,7 +89,7 @@ def sign(x):
 if args.opt == 'SGD':
     optimizer = SGD(model.parameters(), lr=args.lr, momentum=0)
 else:
-    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.8)
+    optimizer = SGD(model.parameters(), lr=args.lr, momentum=0.9)
 
 save_path = f"./SVM_{args.lr}_{args.opt}_{args.epoch}/"
 if not os.path.exists(save_path):
@@ -144,7 +153,7 @@ for epoch in range(num_epochs):
         total += images.shape[0]
     eval_loss = eval_total_loss / len(test_loader)
     eval_acc = float(100 * correct.float() / total)
-    if len(record_dict['val_acc'])==0:
+    if len(record_dict['val_acc']) == 0:
         torch.save(model.state_dict(), '{}/ckpt.pt'.format(save_path))
     elif eval_acc >= max(record_dict['val_acc']):
         torch.save(model.state_dict(), '{}/ckpt.pt'.format(save_path))

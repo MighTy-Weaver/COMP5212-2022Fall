@@ -8,7 +8,7 @@
 by `python LR_train.py --epoch 20 --lr 5e-5 --opt SGD`
 
 `SVM_train.py` is for training support vector machine. Parameters can be added
-by `python SVM_train.py --epoch 20 --lr 5e-5 --opt SGD`
+by `python SVM_train.py --epoch 20 --lr 3e-5 --opt SGDm`
 
 ## Reproduction
 

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from model import SVM_Classifier
 
-seed = 518
+seed = 621
 random.seed(seed)
 os.environ['PYTHONHASHSEED'] = str(seed)
 np.random.seed(seed)
@@ -77,7 +77,7 @@ def loss_func(scores, label):
     """
     loss = 1 - label * scores
     loss[loss <= 0] = 0
-    return torch.sum(loss)
+    return torch.mean(loss)
 
 
 def sign(x):
@@ -115,8 +115,8 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        total_loss += (loss.item() / len(labels))
-        record_dict['trn_iter_loss'].append(loss.item() / len(labels))
+        total_loss += loss.item()
+        record_dict['trn_iter_loss'].append(loss.item())
 
         predicted_answer = sign(outputs).detach().cpu()
         truth_answer = labels.detach().cpu()
@@ -146,8 +146,9 @@ for epoch in range(num_epochs):
         prediction = sign(outputs).detach().cpu()
 
         loss = loss_func(outputs, labels)
-        eval_total_loss += (loss.item() / len(labels))
-        record_dict['val_iter_loss'].append(loss.item() / len(labels))
+
+        eval_total_loss += loss.item()
+        record_dict['val_iter_loss'].append(loss.item())
 
         correct += (prediction.view(-1).long() == labels).sum()
         total += images.shape[0]

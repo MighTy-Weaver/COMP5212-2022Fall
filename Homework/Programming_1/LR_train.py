@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from model import LogisticRegression_Classifier
 
-seed = 518
+seed = 621
 random.seed(seed)
 os.environ['PYTHONHASHSEED'] = str(seed)
 np.random.seed(seed)
@@ -98,8 +98,8 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        total_loss += (loss.item() / len(labels))
-        record_dict['trn_iter_loss'].append(loss.item() / len(labels))
+        total_loss += loss.item()
+        record_dict['trn_iter_loss'].append(loss.item())
 
         predicted_answer = torch.argmax(outputs, dim=-1)
         truth_answer = labels.detach().cpu()

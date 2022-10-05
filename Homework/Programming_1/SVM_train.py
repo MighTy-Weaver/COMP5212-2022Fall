@@ -60,7 +60,7 @@ def loss_func(scores, label):
     The Loss Function of SVM
     :param scores: Predicted score
     :param label: Truth label
-    :return: The sum of loss for all data
+    :return: The mean of loss for one data
     """
     loss = 1 - label * scores
     loss[loss <= 0] = 0

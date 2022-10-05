@@ -9,7 +9,7 @@ class LogisticRegression_Classifier(nn.Module):
         self.linear = Linear(input_dim, output_dim)
 
     def forward(self, x):
-        outputs = sigmoid(self.linear(x))
+        outputs = self.linear(x)
         return outputs
 
 

@@ -4,8 +4,6 @@ import random
 
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score
-from torch import nn
 from torch.autograd import Variable
 from torch.optim import SGD
 from torch.utils.data.sampler import SubsetRandomSampler
@@ -54,8 +52,24 @@ args = parser.parse_args()
 
 num_epochs = args.epoch
 
-model = LogisticRegression_Classifier(28 * 28, 2)
-criterion = nn.CrossEntropyLoss()
+model = LogisticRegression_Classifier(28 * 28, 1)
+
+
+def loss_func(scores, label):
+    """
+    The Loss Function of LR
+    :param scores: Predicted score
+    :param label: Truth label
+    :return: The mean of loss for one data
+    """
+    loss = torch.log(1 + torch.exp(-label.mul(scores)))
+    return torch.mean(loss)
+
+
+def sign(x):
+    return torch.sigmoid(x)
+
+
 if args.opt == 'SGD':
     optimizer = SGD(model.parameters(), lr=args.lr, momentum=0)
 else:
@@ -73,13 +87,15 @@ record_dict = {'trn_loss': [], 'val_loss': [], 'trn_acc': [], 'val_acc': [], 'tr
 for epoch in range(num_epochs):
     total_loss = 0
     model.train()
-    trn_total_pred, trn_total_label = [], []
+    trn_total_pred, trn_total_label = 0, 0
     for i, (images, labels) in enumerate(train_loader):
         images = Variable(images.view(-1, 28 * 28))
-        labels = Variable(labels)
+        labels = Variable(2 * (labels.float() - 0.5))
 
-        outputs = model(images)
-        loss = criterion(outputs, labels)
+        outputs = model(images).squeeze(1)
+        predicted_answer = sign(outputs).round().detach().cpu()
+        predicted_answer[predicted_answer == 0] = -1
+        loss = loss_func(outputs, labels)
 
         optimizer.zero_grad()
         loss.backward()
@@ -88,14 +104,13 @@ for epoch in range(num_epochs):
         total_loss += loss.item()
         record_dict['trn_iter_loss'].append(loss.item())
 
-        predicted_answer = torch.argmax(outputs, dim=-1)
         truth_answer = labels.detach().cpu()
-        trn_total_pred.extend(predicted_answer.tolist())
-        trn_total_label.extend(truth_answer.tolist())
+        trn_total_pred += (predicted_answer.view(-1).long() == labels).sum()
+        trn_total_label += images.shape[0]
 
         progress_bar.update(1)
 
-    trn_acc = float(100 * accuracy_score(trn_total_label, trn_total_pred))
+    trn_acc = float(100 * trn_total_pred.float() / trn_total_label)
     trn_loss = total_loss / len(train_loader)
     record_dict['trn_acc'].append(trn_acc)
     record_dict['trn_loss'].append(trn_loss)
@@ -109,12 +124,12 @@ for epoch in range(num_epochs):
     for images, labels in test_loader:
         images = Variable(images.view(-1, 28 * 28))
 
-        outputs = model(images)
-        prediction = torch.argmax(outputs, dim=-1)
+        outputs = model(images).squeeze(1)
+        prediction = sign(outputs).round().detach().cpu()
 
-        loss = criterion(outputs, labels)
-        eval_total_loss += (loss.item() / len(labels))
-        record_dict['val_iter_loss'].append(loss.item() / len(labels))
+        loss = loss_func(outputs, labels)
+        eval_total_loss += loss.item()
+        record_dict['val_iter_loss'].append(loss.item())
 
         correct += (prediction.view(-1).long() == labels).sum()
         total += images.shape[0]

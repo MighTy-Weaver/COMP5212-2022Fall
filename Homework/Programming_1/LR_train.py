@@ -47,25 +47,12 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=batch_size, shuf
                                           sampler=SubsetRandomSampler(subset_indices))
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--epoch", default=30, type=int, help="Number of epochs to be trained")
-parser.add_argument("--gpu", default=0, type=int, help="GPU to use")
+parser.add_argument("--epoch", default=20, type=int, help="Number of epochs to be trained")
 parser.add_argument("--lr", default=1e-3, type=float, help="learning rate")
 parser.add_argument("--opt", default='SGD', choices=['SGD', 'SGDm'])
 args = parser.parse_args()
 
 num_epochs = args.epoch
-
-# Check device status
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print('CUDA available:', torch.cuda.is_available())
-print(torch.cuda.get_device_name())
-print('Device number:', torch.cuda.device_count())
-print(torch.cuda.get_device_properties(device))
-
-# Set the GPU device
-if torch.cuda.is_available():
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    torch.cuda.set_device(args.gpu)
 
 model = LogisticRegression_Classifier(28 * 28, 2)
 criterion = nn.CrossEntropyLoss()

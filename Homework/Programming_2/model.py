@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 
@@ -10,10 +11,12 @@ class MLP_Classifier(nn.Module):
         self.activation = activation
         if self.activation == 'relu':
             self.activation_function = nn.ReLU()
-        elif self.activation == 'softmax':
-            self.activation_function = nn.Softmax()
+        elif self.activation == 'elu':
+            self.activation_function = nn.ELU()
         elif self.activation == 'sigmoid':
             self.activation_function = nn.Sigmoid()
+        elif self.activation == 'tanh':
+            self.activation_function = nn.Tanh()
         else:
             raise NotImplementedError("Activation function {} has not been implemented.".format(activation))
 
@@ -26,7 +29,7 @@ class MLP_Classifier(nn.Module):
         self.MLP7 = nn.Sequential(nn.Linear(in_features=32, out_features=out_dim), self.activation_function)
 
     def forward(self, x):
-        x1 = self.MLP1(x)
+        x1 = self.MLP1(torch.flatten(x, start_dim=1))
         x2 = self.MLP2(x1)
         x3 = self.MLP3(x2)
         x4 = self.MLP4(x3)
@@ -46,10 +49,12 @@ class CNN_Classifier(nn.Module):
         self.activation = activation
         if self.activation == 'relu':
             self.activation_function = nn.ReLU()
-        elif self.activation == 'softmax':
-            self.activation_function = nn.Softmax()
+        elif self.activation == 'elu':
+            self.activation_function = nn.ELU()
         elif self.activation == 'sigmoid':
             self.activation_function = nn.Sigmoid()
+        elif self.activation == 'tanh':
+            self.activation_function = nn.Tanh()
         else:
             raise NotImplementedError("Activation function {} has not been implemented.".format(activation))
 
@@ -70,7 +75,7 @@ class CNN_Classifier(nn.Module):
         x2 = self.Conv2(x1)
         x3 = self.Conv3(x2)
         x4 = self.Conv4(x3)
-        x5 = self.MLP1(x4)
+        x5 = self.MLP1(torch.flatten(x4, start_dim=1))
         x6 = self.MLP2(x5)
         x7 = self.MLP3(x6)
         return x7

@@ -17,9 +17,9 @@ from model import MLP_Classifier
 parser = argparse.ArgumentParser()
 parser.add_argument("--gpu", default=0, type=int, help="Index of GPU to use")
 parser.add_argument("--activation", default='relu', type=str, help="Type of activation function",
-                    choices=['relu', 'sigmoid', 'softmax'])
+                    choices=['relu', 'sigmoid', 'elu', 'tanh'])
 parser.add_argument("--model", type=str, choices=['MLP', 'CNN'], default='MLP', help="Model structure to use")
-parser.add_argument("--lr", type=float, default=1e-4, help="Learning Rate")
+parser.add_argument("--lr", type=float, default=1e-3, help="Learning Rate")
 parser.add_argument("--epoch", default=50, type=int, help="Number of epochs to be trained")
 parser.add_argument("--seed", type=int, default=621, help="Random seed to use")
 args = parser.parse_args()
@@ -75,7 +75,7 @@ else:
     model = CNN_Classifier(activation=args.activation).to(device)
 
 optimizer = AdamW(model.parameters(), lr=args.lr)
-loss = CrossEntropyLoss()
+criterion = CrossEntropyLoss()
 save_path = f"./{args.model}_{args.activation}_{args.lr}_{args.epoch}/"
 
 if not os.path.exists(save_path):
@@ -91,13 +91,11 @@ for epoch in range(1, 1 + args.epoch):
     model.train()
     trn_total_pred, trn_total_label = 0, 0
     for i, (images, labels) in enumerate(train_loader):
-        images = Variable(images.view(-1, 28 * 28))
-        labels = Variable(2 * (labels.float() - 0.5))
+        images = images.to(device)
+        labels = labels.to(device)
 
         outputs = model(images).squeeze(1)
-        predicted_answer = sign(outputs).round().detach().cpu()
-        predicted_answer[predicted_answer == 0] = -1
-        loss = loss_func(outputs, labels)
+        loss = criterion(outputs, labels)
 
         optimizer.zero_grad()
         loss.backward()
@@ -106,6 +104,7 @@ for epoch in range(1, 1 + args.epoch):
         total_loss += loss.item()
         record_dict['trn_iter_loss'].append(loss.item())
 
+        predicted_answer = torch.argmax(outputs, dim=-1)
         truth_answer = labels.detach().cpu()
         trn_total_pred += (predicted_answer.view(-1).long() == labels).sum()
         trn_total_label += images.shape[0]
@@ -124,16 +123,17 @@ for epoch in range(1, 1 + args.epoch):
     eval_total_loss = 0
 
     for images, labels in test_loader:
-        images = Variable(images.view(-1, 28 * 28))
+        images = images.to(device)
+        labels = labels.to(device)
 
         outputs = model(images).squeeze(1)
-        prediction = sign(outputs).round().detach().cpu()
+        predicted_answer = torch.argmax(outputs, dim=-1)
 
-        loss = loss_func(outputs, labels)
+        loss = criterion(outputs, labels)
         eval_total_loss += loss.item()
         record_dict['val_iter_loss'].append(loss.item())
 
-        correct += (prediction.view(-1).long() == labels).sum()
+        correct += (predicted_answer.view(-1).long() == labels).sum()
         total += images.shape[0]
     eval_loss = eval_total_loss / len(test_loader)
     eval_acc = float(100 * correct.float() / total)
@@ -144,6 +144,6 @@ for epoch in range(1, 1 + args.epoch):
         'val_acc': eval_acc
     })
     print('Accuracy of the model on train images: %f%% \t test images: %f%%' % (trn_acc, eval_acc))
+    print('MAX train acc: {}\tMAX val acc:{}'.format(max(record_dict['trn_acc']), max(record_dict['val_acc'])))
 
-np.save('{}/record.npy'.format(save_path), record_dict)
-torch.save(model.state_dict(), '{}/ckpt.pt'.format(save_path))
+    np.save('{}/record.npy'.format(save_path), record_dict)

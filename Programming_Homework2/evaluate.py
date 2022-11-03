@@ -2,35 +2,54 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 model_choices = ['MLP', 'CNN']
-activation_choices = ['relu', 'elu', 'sigmoid', 'softmax']
+activation_choices = ['relu', 'lrelu', 'elu', 'sigmoid', 'tanh']
+activation_str_dict = {'relu': 'ReLU', 'lrelu': 'Leaky ReLU', 'elu': 'ELU', 'sigmoid': 'Sigmoid', 'tanh': 'Tanh'}
 
-for ind, lr in enumerate(lr_choices):
-    lr_record = np.load('./LR_{}_SGD_20/record.npy'.format(lr), allow_pickle=True).item()
-    svm_record = np.load('./SVM_{}_SGD_20/record.npy'.format(lr), allow_pickle=True).item()
-    lr_record_2 = np.load('./LR_{}_SGDm_20/record.npy'.format(lr), allow_pickle=True).item()
-    svm_record_2 = np.load('./SVM_{}_SGDm_20/record.npy'.format(lr), allow_pickle=True).item()
-    num_string = "{" + lr_choices_str[ind] + "}"
-    print("\\num{} &  {}\% &  {}\% &  {}\% & {}\% \\\\".format(num_string, round(max(lr_record['val_acc']), 2),
-                                                               round(max(lr_record_2['val_acc']), 2),
-                                                               round(max(svm_record['val_acc']), 2),
-                                                               round(max(svm_record_2['val_acc']), 2)
-                                                               ))
+for a in activation_choices:
+    MLP_record = np.load(f'./MLP_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    CNN_record = np.load(f'./CNN_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    print("{} & {} & {} \\\\".format(activation_str_dict[a], max(MLP_record['val_acc']), max(CNN_record['val_acc'])))
 
 plt.rcParams.update({'font.size': 16})
 plt.rcParams['figure.figsize'] = 20, 14
-template = ['./LR_{}_SGD_20/record.npy', './LR_{}_SGDm_20/record.npy', './SVM_{}_SGD_20/record.npy',
-            './SVM_{}_SGDm_20/record.npy']
-title = ['Logistic Regression with SGD', 'Logistic Regression with SGD-Momentum ($m=0.9$)',
-         'Support Vector Machine with SGD', 'Support Vector Machine with SGD-Momentum ($m=0.9$)']
 for i in range(4):
     plt.subplot(2, 2, i + 1)
-    for lr in [0.05, 0.005, 0.0005, '5e-05']:
-        record = np.load(template[i].format(lr), allow_pickle=True).item()
-        plt.plot(range(len(record['trn_loss'])), record['trn_loss'], label="LR = {}".format(lr))
-    plt.legend()
-    plt.xlabel("Epoch")
-    plt.xticks([0, 2, 4, 6, 8, 10, 12, 14, 16, 18], [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
-    plt.ylabel("Training Loss")
-    plt.title(title[i])
+
+plt.subplot(2, 2, 1)
+for a in activation_choices:
+    MLP_record = np.load(f'./MLP_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    plt.plot(range(len(MLP_record['trn_loss'])), MLP_record['trn_loss'], label=activation_str_dict[a])
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Training Loss")
+plt.title("Training Loss Curve for Multi Layer Perceptron")
+
+plt.subplot(2, 2, 2)
+for a in activation_choices:
+    CNN_record = np.load(f'./CNN_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    plt.plot(range(len(CNN_record['trn_loss'])), CNN_record['trn_loss'], label=activation_str_dict[a])
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Training Loss")
+plt.title("Training Loss Curve for Convolutional Neural Network")
+
+plt.subplot(2, 2, 3)
+for a in activation_choices:
+    MLP_record = np.load(f'./MLP_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    plt.plot(range(len(MLP_record['val_acc'])), MLP_record['val_acc'], label=activation_str_dict[a])
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Testing Accuracy")
+plt.title("Testing Accuracy Curve for Multi Layer Perceptron")
+
+plt.subplot(2, 2, 4)
+for a in activation_choices:
+    CNN_record = np.load(f'./CNN_{a}_0.001_50_record.npy', allow_pickle=True).item()
+    plt.plot(range(len(CNN_record['val_acc'])), CNN_record['val_acc'], label=activation_str_dict[a])
+plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("Testing Accuracy")
+plt.title("Testing Accuracy Curve for Convolutional Neural Network")
+
 plt.savefig('./loss.png', dpi=400, bbox_inches='tight')
 plt.clf()

@@ -17,7 +17,7 @@ from model import MLP_Classifier
 parser = argparse.ArgumentParser()
 parser.add_argument("--gpu", default=0, type=int, help="Index of GPU to use")
 parser.add_argument("--activation", default='relu', type=str, help="Type of activation function",
-                    choices=['relu', 'sigmoid', 'elu', 'tanh'])
+                    choices=['relu', 'sigmoid', 'elu', 'tanh', 'lrelu'])
 parser.add_argument("--model", type=str, choices=['MLP', 'CNN'], default='MLP', help="Model structure to use")
 parser.add_argument("--lr", type=float, default=1e-3, help="Learning Rate")
 parser.add_argument("--epoch", default=50, type=int, help="Number of epochs to be trained")
@@ -76,10 +76,7 @@ else:
 
 optimizer = AdamW(model.parameters(), lr=args.lr)
 criterion = CrossEntropyLoss()
-save_path = f"./{args.model}_{args.activation}_{args.lr}_{args.epoch}/"
-
-if not os.path.exists(save_path):
-    os.mkdir(save_path)
+save_path = f"./{args.model}_{args.activation}_{args.lr}_{args.epoch}"
 
 progress_bar = tqdm(range(args.epoch * len(train_loader)))
 
@@ -146,4 +143,4 @@ for epoch in range(1, 1 + args.epoch):
     print('Accuracy of the model on train images: %f%% \t test images: %f%%' % (trn_acc, eval_acc))
     print('MAX train acc: {}\tMAX val acc:{}'.format(max(record_dict['trn_acc']), max(record_dict['val_acc'])))
 
-    np.save('{}/record.npy'.format(save_path), record_dict)
+    np.save('{}_record.npy'.format(save_path), record_dict)

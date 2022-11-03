@@ -20,13 +20,19 @@ class MLP_Classifier(nn.Module):
         else:
             raise NotImplementedError("Activation function {} has not been implemented.".format(activation))
 
-        self.MLP1 = nn.Sequential(nn.Linear(in_features=input_dim, out_features=1024), self.activation_function)
-        self.MLP2 = nn.Sequential(nn.Linear(in_features=1024, out_features=512), self.activation_function)
-        self.MLP3 = nn.Sequential(nn.Linear(in_features=512, out_features=256), self.activation_function)
-        self.MLP4 = nn.Sequential(nn.Linear(in_features=256, out_features=128), self.activation_function)
-        self.MLP5 = nn.Sequential(nn.Linear(in_features=128, out_features=64), self.activation_function)
-        self.MLP6 = nn.Sequential(nn.Linear(in_features=64, out_features=32), self.activation_function)
-        self.MLP7 = nn.Sequential(nn.Linear(in_features=32, out_features=out_dim), self.activation_function)
+        self.MLP1 = nn.Sequential(nn.Linear(in_features=input_dim, out_features=1024),
+                                  nn.BatchNorm1d(num_features=1024), self.activation_function)
+        self.MLP2 = nn.Sequential(nn.Linear(in_features=1024, out_features=512), nn.BatchNorm1d(num_features=512),
+                                  self.activation_function)
+        self.MLP3 = nn.Sequential(nn.Linear(in_features=512, out_features=256), nn.BatchNorm1d(num_features=256),
+                                  self.activation_function)
+        self.MLP4 = nn.Sequential(nn.Linear(in_features=256, out_features=128), nn.BatchNorm1d(num_features=128),
+                                  self.activation_function)
+        self.MLP5 = nn.Sequential(nn.Linear(in_features=128, out_features=64), nn.BatchNorm1d(num_features=64),
+                                  self.activation_function)
+        self.MLP6 = nn.Sequential(nn.Linear(in_features=64, out_features=32), nn.BatchNorm1d(num_features=32),
+                                  self.activation_function)
+        self.MLP7 = nn.Sequential(nn.Linear(in_features=32, out_features=out_dim))
 
     def forward(self, x):
         x1 = self.MLP1(torch.flatten(x, start_dim=1))
@@ -55,20 +61,28 @@ class CNN_Classifier(nn.Module):
             self.activation_function = nn.Sigmoid()
         elif self.activation == 'tanh':
             self.activation_function = nn.Tanh()
+        elif self.activation == 'lrelu':
+            self.activation_function = nn.LeakyReLU()
         else:
             raise NotImplementedError("Activation function {} has not been implemented.".format(activation))
 
         self.Conv1 = nn.Sequential(
-            nn.Conv2d(in_channels=self.in_channel, out_channels=64, kernel_size=(3, 3), stride=1, padding=1))
+            nn.Conv2d(in_channels=self.in_channel, out_channels=64, kernel_size=(3, 3), stride=1, padding=1),
+            nn.BatchNorm2d(num_features=64), self.activation_function)
         self.Conv2 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=2, padding=1))
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=2, padding=1),
+            nn.BatchNorm2d(num_features=128), self.activation_function)
         self.Conv3 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), stride=2, padding=1))
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), stride=2, padding=1),
+            nn.BatchNorm2d(num_features=256), self.activation_function)
         self.Conv4 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=self.out_channel, kernel_size=(3, 3), stride=2, padding=1))
-        self.MLP1 = nn.Sequential(nn.Linear(in_features=4096, out_features=1024), self.activation_function)
-        self.MLP2 = nn.Sequential(nn.Linear(in_features=1024, out_features=1024), self.activation_function)
-        self.MLP3 = nn.Sequential(nn.Linear(in_features=1024, out_features=10), self.activation_function)
+            nn.Conv2d(in_channels=256, out_channels=self.out_channel, kernel_size=(3, 3), stride=2, padding=1),
+            nn.BatchNorm2d(num_features=self.out_channel), self.activation_function)
+        self.MLP1 = nn.Sequential(nn.Linear(in_features=4096, out_features=1024), nn.BatchNorm1d(num_features=1024),
+                                  self.activation_function)
+        self.MLP2 = nn.Sequential(nn.Linear(in_features=1024, out_features=256), nn.BatchNorm1d(num_features=256),
+                                  self.activation_function)
+        self.MLP3 = nn.Sequential(nn.Linear(in_features=256, out_features=10))
 
     def forward(self, x):
         x1 = self.Conv1(x)

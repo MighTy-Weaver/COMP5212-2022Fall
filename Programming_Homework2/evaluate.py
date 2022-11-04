@@ -8,7 +8,8 @@ activation_str_dict = {'relu': 'ReLU', 'lrelu': 'Leaky ReLU', 'elu': 'ELU', 'sig
 for a in activation_choices:
     MLP_record = np.load(f'./MLP_{a}_0.001_50_record.npy', allow_pickle=True).item()
     CNN_record = np.load(f'./CNN_{a}_0.001_50_record.npy', allow_pickle=True).item()
-    print("{} & {} & {} \\\\".format(activation_str_dict[a], max(MLP_record['val_acc']), max(CNN_record['val_acc'])))
+    print("{} & {} & {} \\\\".format(activation_str_dict[a], round(max(MLP_record['val_acc']), 2),
+                                     round(max(CNN_record['val_acc']), 2)))
 
 plt.rcParams.update({'font.size': 16})
 plt.rcParams['figure.figsize'] = 20, 14
@@ -51,5 +52,5 @@ plt.xlabel("Epoch")
 plt.ylabel("Testing Accuracy")
 plt.title("Testing Accuracy Curve for Convolutional Neural Network")
 
-plt.savefig('./loss.png', dpi=400, bbox_inches='tight')
+plt.savefig('./loss.pdf', dpi=800, bbox_inches='tight')
 plt.clf()

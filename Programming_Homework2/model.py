@@ -17,6 +17,8 @@ class MLP_Classifier(nn.Module):
             self.activation_function = nn.Sigmoid()
         elif self.activation == 'tanh':
             self.activation_function = nn.Tanh()
+        elif self.activation == 'lrelu':
+            self.activation_function = nn.LeakyReLU()
         else:
             raise NotImplementedError("Activation function {} has not been implemented.".format(activation))
 

@@ -13,8 +13,6 @@ for a in activation_choices:
 
 plt.rcParams.update({'font.size': 16})
 plt.rcParams['figure.figsize'] = 21, 20
-for i in range(4):
-    plt.subplot(2, 2, i + 1)
 
 plt.subplot(3, 2, 1)
 for a in activation_choices:
@@ -51,7 +49,6 @@ plt.legend()
 plt.xlabel("Epoch")
 plt.ylabel("Training Accuracy")
 plt.title("Training Accuracy Curve for Convolutional Neural Network")
-
 
 plt.subplot(3, 2, 5)
 for a in activation_choices:

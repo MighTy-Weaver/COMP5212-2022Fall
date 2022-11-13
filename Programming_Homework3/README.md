@@ -1,4 +1,4 @@
-# COMP5212 Programming Homework 2
+# COMP5212 Programming Homework 3
 
 ## Code Explanation
 
